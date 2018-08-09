@@ -1,4 +1,4 @@
-let crypto = require('crypto')
+import * as crypto from 'crypto'
 
 const GUID_SIZE = 16
 const TIME_SIZE = 6 // 10889 year
@@ -8,15 +8,15 @@ const SEQUENCE_SIZE = 4 // ~100k guids/ms (avg worst)
 const SEQUENCE_END = TIME_SIZE + SEQUENCE_SIZE - 1
 const B64_LENGTH = Math.ceil(GUID_SIZE * 8 / 6)
 
-let cached_guid = null
-let cached_time = 0
+let cachedGuid: Buffer
+let cachedTime: number
 
 function sameMsGuid () {
-  for(let idx = SEQUENCE_END; idx >= TIME_SIZE; idx--) {
-    if (cached_guid[idx] === 0xFF) {
-      cached_guid[idx] = 0x00
+  for (let idx = SEQUENCE_END; idx >= TIME_SIZE; idx--) {
+    if (cachedGuid[idx] === 0xFF) {
+      cachedGuid[idx] = 0x00
     } else {
-      ++cached_guid[idx]
+      ++cachedGuid[idx]
       return
     }
   }
@@ -25,30 +25,30 @@ function sameMsGuid () {
 }
 
 function nextMsGuid () {
-  let guid = new Buffer(16)
+  const guid = Buffer.allocUnsafe(GUID_SIZE)
 
-  guid.writeUIntBE(cached_time, 0, TIME_SIZE)
+  guid.writeUIntBE(cachedTime, 0, TIME_SIZE)
 
-  let random = crypto.randomBytes(RANDOM_SIZE)
+  const random = crypto.randomBytes(RANDOM_SIZE)
   random.copy(guid, RANDOM_OFFSET)
 
-  cached_guid = guid
+  cachedGuid = guid
 }
 
-function guid () {
-  let now_time = Date.now()
+export function guid () {
+  const nowTime = Date.now()
 
-  if (now_time != cached_time) {
-    cached_time = now_time
+  if (nowTime !== cachedTime) {
+    cachedTime = nowTime
     nextMsGuid()
   } else {
     sameMsGuid()
   }
 
-  return base64_encode(cached_guid)
+  return bufferToGuid(cachedGuid)
 }
 
-function base64_encode (bytes) {
+export function bufferToGuid (bytes: Buffer) {
   return bytes
     .toString('base64')
     .replace('+', '-')
@@ -56,6 +56,6 @@ function base64_encode (bytes) {
     .substr(0, B64_LENGTH)
 }
 
-function base64_decode (str) {
+export function guidToBuffer (str: string) {
   return Buffer.from(str, 'base64')
 }
