@@ -51,8 +51,8 @@ export function guid () {
 export function bufferToGuid (bytes: Buffer) {
   return bytes
     .toString('base64')
-    .replace('+', '-')
-    .replace('/', '_')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
     .substr(0, B64_LENGTH)
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@up24/guid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lex sortable guid",
   "main": "dist/guid.js",
   "types": "dist/guid.d.ts",
