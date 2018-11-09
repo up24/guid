@@ -1,4 +1,5 @@
 import * as crypto from 'crypto'
+import { B64_ENCODE, LEX_DECODE } from './lex'
 
 const GUID_SIZE = 16
 const TIME_SIZE = 6 // 10889 year
@@ -6,7 +7,7 @@ const RANDOM_SIZE = GUID_SIZE - TIME_SIZE
 const RANDOM_OFFSET = TIME_SIZE
 const SEQUENCE_SIZE = 4 // ~100k guids/ms (avg worst)
 const SEQUENCE_END = TIME_SIZE + SEQUENCE_SIZE - 1
-const B64_LENGTH = Math.ceil(GUID_SIZE * 8 / 6)
+const B64_LENGTH = Math.ceil(GUID_SIZE * 8 / 6) // 22
 
 let cachedGuid: Buffer
 let cachedTime: number
@@ -49,13 +50,21 @@ export function guid () {
 }
 
 export function bufferToGuid (bytes: Buffer) {
-  return bytes
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .substr(0, B64_LENGTH)
+  const b64str = bytes.toString('base64')
+
+  let out = ''
+  for (let i = 0; i < B64_LENGTH; i++) {
+    out += B64_ENCODE[b64str[i]]
+  }
+
+  return out
 }
 
 export function guidToBuffer (str: string) {
-  return Buffer.from(str, 'base64')
+  let b64str = ''
+  for (let i = 0; i < B64_LENGTH; i++) {
+    b64str += LEX_DECODE[str[i]]
+  }
+
+  return Buffer.from(b64str + '==', 'base64')
 }
